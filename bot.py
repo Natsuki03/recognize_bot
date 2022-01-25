@@ -43,14 +43,24 @@ ss = StandardScaler()
 ss_features = ss.fit_transform(features)
 ss_X_train, ss_X_test, ss_y_train, ss_y_test = train_test_split(ss_features, target, train_size=0.8, random_state=0)
 
+#アンダーサンプリング
+from imblearn.under_sampling import RandomUnderSampler
+positive_count_train = ss_y_train.value_counts()[1]
+strategy = {0:positive_count_train*2, 1:positive_count_train}
+
+rus = RandomUnderSampler(random_state=0, sampling_strategy = strategy)
+X_resampled, y_resampled = rus.fit_resample(ss_X_train, ss_y_train)
+y_resampled.value_counts()
+
 #EFS
 from mlxtend.feature_selection import ExhaustiveFeatureSelector as EFS
 clf = RandomForestClassifier(max_depth=2, random_state=0)
 efs1 = EFS(clf, min_features=10, max_features=14)
-efs1 = efs1.fit(ss_X_train,  ss_y_train)
+efs1 = efs1.fit(X_resampled,  y_resampled)
 print('Best accuracy score: %.2f' % efs1.best_score_)
 print('Best subset:', efs1.best_feature_names_)
 
+#GredSearchCV
 from sklearn.model_selection import GridSearchCV
 def params():
   ret = {
@@ -61,7 +71,7 @@ def params():
   return ret
 
 gscv = GridSearchCV(LogisticRegression(), params(), cv=4, verbose=2)
-gscv.fit(ss_X_train, ss_y_train)
+gscv.fit(X_resampled, y_resampled)
 
 gscv_result = pd.DataFrame.from_dict(gscv.cv_results_)
 gscv_result.sort_values("rank_test_score")
