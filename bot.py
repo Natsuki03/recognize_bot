@@ -43,6 +43,14 @@ ss = StandardScaler()
 ss_features = ss.fit_transform(features)
 ss_X_train, ss_X_test, ss_y_train, ss_y_test = train_test_split(ss_features, target, train_size=0.8, random_state=0)
 
+#EFS
+from mlxtend.feature_selection import ExhaustiveFeatureSelector as EFS
+clf = RandomForestClassifier(max_depth=2, random_state=0)
+efs1 = EFS(clf, min_features=10, max_features=14)
+efs1 = efs1.fit(ss_X_train,  ss_y_train)
+print('Best accuracy score: %.2f' % efs1.best_score_)
+print('Best subset:', efs1.best_feature_names_)
+
 #ロジスティック回帰
 LR = LogisticRegression()
 LR.fit(ss_X_train, ss_y_train)
