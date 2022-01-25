@@ -19,6 +19,7 @@ print(res["bot"])
 #可視化
 hum_df = train[train["bot"] == 0]
 bot_df = train[train["bot"] == 1]
+train["bot"].value_counts().plot.pie(explode=[0,0.2],autopct='%1.1f%%',shadow=True)
 
 search_idx = "friends_count"
 
@@ -26,40 +27,35 @@ plt.hist(hum_df[search_idx], alpha=0.5, label="human")
 plt.hist(bot_df[search_idx], alpha=0.5, label="bot")
 plt.show()
 
+
+#学習
 features = train.drop("bot", axis=1)
 target = train["bot"]
 
 #print(features.shape)
 #print(target.shape)
 
-X_train, X_test, y_train, y_test = train_test_split(features, target, train_size=0.8, random_state=0)
+#X_train, X_test, y_train, y_test = train_test_split(features, target, train_size=0.8, random_state=0)
+
+#前処理
+from sklearn.preprocessing import StandardScaler
+ss = StandardScaler()
+ss_features = ss.fit_transform(features)
+ss_X_train, ss_X_test, ss_y_train, ss_y_test = train_test_split(ss_features, target, train_size=0.8, random_state=0)
 
 #ロジスティック回帰
 LR = LogisticRegression()
-LR.fit(X_train, y_train)
+LR.fit(ss_X_train, ss_y_train)
 
-score = LR.score(X_test, y_test)
-#print(score)
+score = LR.score(ss_X_test, ss_y_test)
+print(score)
 
 
+#予測
+ss_test = ss.fit_transform(test)
 
 pred = LR.predict(test)
 pred = pred.astype(np.int64)
 
 submit[1] = pred
-submit.to_csv("/Users/e195767/VS code/SIGNATE/bot/submit1.csv", header=None)
-
-
-#ランダムフォレスト
-clf = RandomForestClassifier()
-clf.fit(X_train, y_train)
-
-score = clf.score(X_test, y_test)
-print(score)
-
-
-pred = clf.predict(test)
-pred = pred.astype(np.int64)
-
-submit[1] = pred
-submit.to_csv("/Users/e195767/VS code/SIGNATE/bot/submit2.csv", header=None)
+submit.to_csv("/Users/e195767/VS code/SIGNATE/bot/submit.csv", header=None)
