@@ -51,18 +51,40 @@ efs1 = efs1.fit(ss_X_train,  ss_y_train)
 print('Best accuracy score: %.2f' % efs1.best_score_)
 print('Best subset:', efs1.best_feature_names_)
 
+from sklearn.model_selection import GridSearchCV
+def params():
+  ret = {
+      "penalty":["none", "l1", "l2", "elasticnet"],
+      "C":[10 ** i for i in range(-5, 6)], #10**-5 ~ 10**5
+      "solver":["newton-cg", "lbfgs", "liblinear", "sag", "saga"]
+  }
+  return ret
+
+gscv = GridSearchCV(LogisticRegression(), params(), cv=4, verbose=2)
+gscv.fit(ss_X_train, ss_y_train)
+
+gscv_result = pd.DataFrame.from_dict(gscv.cv_results_)
+gscv_result.sort_values("rank_test_score")
+
+best = gscv.best_estimator_
+pred = best.predict(ss_X_test)
+
+score = best.score(ss_X_test, ss_y_test)
+print(score)
+
+"""
 #ロジスティック回帰
 LR = LogisticRegression()
 LR.fit(ss_X_train, ss_y_train)
 
 score = LR.score(ss_X_test, ss_y_test)
 print(score)
-
+"""
 
 #予測
 ss_test = ss.fit_transform(test)
 
-pred = LR.predict(test)
+pred = best.predict(test)
 pred = pred.astype(np.int64)
 
 submit[1] = pred
